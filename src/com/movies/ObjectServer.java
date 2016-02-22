@@ -3,10 +3,13 @@ package com.movies;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ObjectServer {
 
     static ServerMode mode;
+    private static final String filePath= "C:\\Workspace\\Java\\Week11A_Movies_V3.0\\file.ser";
 
     public static void main(String[] args) {
         Socket clientSocket = null;
@@ -56,19 +59,45 @@ public class ObjectServer {
                     if (command.equals(Command.GET)) {
                         mode = ServerMode.LOAD;
                         System.out.println("Server Mode changed to: LOAD");
+                        List<Object> results = new ArrayList<>();
                         try {
-                            oos.writeObject(load());
+                            FileInputStream fis = new FileInputStream(filePath);
+                            ObjectInputStream objectInputStream = new ObjectInputStream(fis);
+                            while (true) {
+                                results.add(objectInputStream.readObject());
+                            }
+                        } catch (EOFException eofe) {
+                            System.out.println("filereading complete");
                         } catch (IOException e) {
                             System.out.println("get branch loading problem");
+                        } catch (NullPointerException npe){
+                            System.out.println("There is no file");
+                        } catch (ClassNotFoundException cnfe){
+                            System.out.println("class not found in file");
                         }
+
+                        try {
+                            oos.writeObject(results);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
                     } else if (command.equals(Command.PUT)) {
                         mode = ServerMode.SAVE;
                         System.out.println("Server Mode changed to: SAVE");
+                        File f = new File(filePath);
                         try {
-                            FileOutputStream fos = new FileOutputStream("C:\\Workspace\\Java\\Week11A_Movies_V3.0\\file.ser");
-                            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fos);
-                            save(ois.readObject(), objectOutputStream);
-
+                            if (!f.exists())
+                            {
+                                ObjectOutputStream fileHeaderWriter = new ObjectOutputStream(new FileOutputStream(f));
+                                fileHeaderWriter.close();
+                            }
+                            FileOutputStream fos = new FileOutputStream(filePath, true);
+                            AppendingObjectOutputStream objectOutputStream = new AppendingObjectOutputStream(fos);
+                            while(ois.read() == 0) {
+                                save(ois.readObject(), objectOutputStream);
+                            }
                         } catch (IOException e) {
                             System.out.println("put branch io problem");
                         } catch (ClassNotFoundException e) {

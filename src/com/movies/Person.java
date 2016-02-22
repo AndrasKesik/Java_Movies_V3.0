@@ -40,13 +40,4 @@ public class Person implements Serializable {
         this.salary = salary;
     }
 
-	@Override
-	public String toString() {
-		return "Person{" +
-				"firstName='" + firstName + '\'' +
-				", lastName='" + lastName + '\'' +
-				", gender=" + gender +
-				", salary=" + salary +
-				'}';
-	}
 }
