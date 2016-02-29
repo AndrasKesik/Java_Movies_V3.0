@@ -4,12 +4,14 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ObjectServer {
 
     static ServerMode mode;
-    private static final String filePath= "C:\\Workspace\\Java\\Week11A_Movies_V3.0\\file.ser";
+    private static final String filePath = "C:\\Workspace\\Java\\Week11A_Movies_V3.0\\file.ser";
 
     public static void main(String[] args) {
         Socket clientSocket = null;
@@ -43,15 +45,11 @@ public class ObjectServer {
                 System.out.println("Stream initialization failed");
             }
 
-            while (true) {
-                Object inputObject = null;
+            Object inputObject = null;
+            kulso: while (true) {
 
 
-                try {
-                    inputObject = ois.readObject();
-                } catch (Exception e) {
-                    System.out.println("Can't read from ObjectInputStream");
-                }
+
 
                 if (inputObject instanceof Command) {
                     Command command = (Command) inputObject;
@@ -64,15 +62,15 @@ public class ObjectServer {
                             FileInputStream fis = new FileInputStream(filePath);
                             ObjectInputStream objectInputStream = new ObjectInputStream(fis);
                             while (true) {
-                                results.add(objectInputStream.readObject());
+                                results.add(load(objectInputStream));
                             }
                         } catch (EOFException eofe) {
                             System.out.println("filereading complete");
                         } catch (IOException e) {
                             System.out.println("get branch loading problem");
-                        } catch (NullPointerException npe){
+                        } catch (NullPointerException npe) {
                             System.out.println("There is no file");
-                        } catch (ClassNotFoundException cnfe){
+                        } catch (ClassNotFoundException cnfe) {
                             System.out.println("class not found in file");
                         }
 
@@ -88,16 +86,28 @@ public class ObjectServer {
                         System.out.println("Server Mode changed to: SAVE");
                         File f = new File(filePath);
                         try {
-                            if (!f.exists())
-                            {
+                            if (!f.exists()) {
                                 ObjectOutputStream fileHeaderWriter = new ObjectOutputStream(new FileOutputStream(f));
                                 fileHeaderWriter.close();
                             }
                             FileOutputStream fos = new FileOutputStream(filePath, true);
                             AppendingObjectOutputStream objectOutputStream = new AppendingObjectOutputStream(fos);
-                            while(ois.read() == 0) {
-                                save(ois.readObject(), objectOutputStream);
-                            }
+
+                            Object obj;
+                            do{
+                                obj = ois.readObject();
+                                System.out.println("object read");
+                                if(!(obj instanceof Command)){
+                                    save(obj, objectOutputStream);
+                                    System.out.println("Saved");
+                                }else{
+                                    inputObject =  obj;
+                                    System.out.println("caojdg");
+                                    continue kulso; }
+
+                            }while(true);
+
+
                         } catch (IOException e) {
                             System.out.println("put branch io problem");
                         } catch (ClassNotFoundException e) {
@@ -105,6 +115,7 @@ public class ObjectServer {
                         }
 
                         System.out.println("success");
+
                     } else if (command.equals(Command.EXIT)) {
                         System.out.println("byebyebye");
                         break;
@@ -112,8 +123,13 @@ public class ObjectServer {
 
                 }
 
+                try {
+                    inputObject = ois.readObject();
+                } catch (Exception e) {
+                    System.out.println("Can't read from ObjectInputStream");
+                    break;
+                }
             }
-
 
             try {
                 clientSocket.close();
@@ -126,16 +142,9 @@ public class ObjectServer {
     }
 
 
-    public static Object load() {
-        Object o = null;
-        try (FileInputStream fis = new FileInputStream("C:\\Workspace\\Java\\Week11A_Movies_V3.0\\file.ser");
-             ObjectInputStream objectInputStream = new ObjectInputStream(fis))
-        {
-            o = objectInputStream.readObject();
-        } catch (Exception e) {
-            System.out.println("load method error, cant read from file");
-        }
-        return o;
+    public static Object load(ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException{
+        return objectInputStream.readObject();
+
     }
 
 

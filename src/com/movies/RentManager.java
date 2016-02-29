@@ -75,8 +75,7 @@ public class RentManager {
 
                 if (userInput.toUpperCase().equals("GET")) {
                     oos.writeObject(Command.GET);
-                    List<Object> results= new ArrayList<>();
-                    results = (List)ois.readObject();
+                    List<Object> results= (List)ois.readObject();
                     for (Object o:results){
                         System.out.println(o);
                     }
@@ -84,23 +83,19 @@ public class RentManager {
                 } else if (userInput.toUpperCase().equals("PUT")) {
                     oos.writeObject(Command.PUT);
 
-                    oos.write(0);
-                    oos.writeObject(p3);
-                    oos.write(0);
+
+                    oos.writeObject(p4);
                     oos.writeObject(p2);
-                    oos.write(0);
                     oos.writeObject(g1);
-                    oos.write(0);
                     oos.writeObject(m1);
-                    oos.write(0);
                     oos.writeObject(b1);
+
                     System.out.println("ok");
 
                 } else if (userInput.toUpperCase().equals("EXIT")) {
                     oos.writeObject(Command.EXIT);
                     break;
                 }
-
 
             } catch (Exception e) {
                 e.printStackTrace();
